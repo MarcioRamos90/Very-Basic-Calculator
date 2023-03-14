@@ -1,75 +1,66 @@
-use std::io;
+use std::{
+    env,
+    ops::{Add, Div, Mul, Sub},
+};
 
-fn sum(a:i32, b:i32) -> i32 {
-    a + b
+fn calc(a: i32, b: i32, operator: String) {
+    let result = match operator.as_str() {
+        "+" => a.add(b),
+        "*" => a.mul(b),
+        "/" => a.div(b),
+        "-" => a.sub(b),
+        "%" => a % b,
+        "q" => return,
+        _ => {
+            eprintln!("Invalid operator!");
+            return;
+        }
+    };
+
+    println!("{a} {operator} {b} is equal {result}\n");
+}
+#[derive(Debug)]
+struct Arguments {
+    a: i32,
+    b: i32,
+    operator: String,
 }
 
-fn mul(a:i32, b:i32) -> i32 {
-    a * b
-}
+impl Arguments {
+    fn new(args: &[String]) -> Result<Arguments, &'static str> {
+        if args.len() < 2 {
+            return Err("not enough arguments");
+        } else if args.len() > 4 {
+            println!("{args:?}");
+            return Err("too much arguments");
+        }
 
-fn div(a:i32, b:i32) -> i32 {
-    a / b
-}
-
-fn sub(a:i32, b:i32) -> i32 {
-    a - b
-}
-
-
-fn get_number(position: String) -> i32 {
-    loop {
-        println!("Enter {position} number");
-
-        let mut number = String::new();
-
-        io::stdin()
-            .read_line(&mut number)
-            .expect("Failed to read");
-
-        let number: i32 = match number.trim().parse() {
+        let a: i32 = match args[1].trim().parse() {
             Ok(n) => n,
-            Err(_) => {
-                println!("Entera valid number!");
-                continue
-            }
+            Err(_) => panic!("Invalid number!"),
         };
-        return number;
+
+        let operator = args[2].trim().to_string();
+
+        let b: i32 = match args[3].trim().parse() {
+            Ok(n) => n,
+            Err(_) => panic!("Invalid number!"),
+        };
+
+        return Ok(Arguments {
+            a: a,
+            b: b,
+            operator: operator,
+        });
     }
 }
 
 fn main() {
-
-    let a: i32 = get_number(String::from("first"));
-    let b: i32 = get_number(String::from("second"));
-
-    println!("---------");
-    println!("Calulator");
-    println!("---------\n");
- 
-    loop {
-        println!("Enter the operation: ");
-        let mut operator = String::new();
-
-        io::stdin()
-            .read_line(&mut operator)
-            .expect("failed to read");
-
-        operator = operator.trim().to_string();
-
-        let result = match operator.as_str() {
-            "+" => sum(a, b),
-            "*" => mul(a, b),
-            "/" => div(a, b),
-            "-" => sub(a, b),
-            "q" => break,
-            _ => {
-                println!("Enter a valid operation!\n");
-                continue
-            },
-        };
-    
-        println!("{a} {operator} {b} is equal {result}\n");
-    }
-    println!("Thanks, good bye!");
+    let args: Vec<String> = env::args().collect();
+    match Arguments::new(&args) {
+        Ok(a) => {
+            calc(a.a, a.b, a.operator);
+        }
+        Err(e) => eprintln!("{e}"),
+    };
 }
